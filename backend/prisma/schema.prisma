@@ -1,0 +1,449 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  DRIVER
+  CUSTOMER
+}
+
+enum VerificationStatus {
+  PENDING
+  SUBMITTED
+  VERIFIED
+  REJECTED
+}
+
+enum VehicleType {
+  TRUCK
+  MINI_TRUCK
+  PICKUP
+  TEMPO
+  VAN
+  OTHER
+}
+
+enum TripStatus {
+  PLANNED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum LoadStatus {
+  PENDING
+  SCHEDULED
+  RESERVED
+  ASSIGNED
+  IN_TRANSIT
+  DELIVERED
+  EXPIRED
+  CANCELLED
+}
+
+enum RecommendationStatus {
+  PENDING
+  NEGOTIATING
+  RESERVED
+  ACCEPTED
+  REJECTED
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum FlexibilityLevel {
+  STRICT
+  BALANCED
+  FLEXIBLE
+}
+
+enum ReturnIntent {
+  YES
+  NO
+  NOT_SURE
+}
+
+enum MatchQuality {
+  EXCELLENT
+  GOOD
+  FAIR
+}
+
+enum DriverStatus {
+  AVAILABLE
+  BUSY
+  OFFLINE
+  ON_LEAVE
+}
+
+enum LoadSchedulingType {
+  IMMEDIATE
+  SCHEDULED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id               String            @id @default(uuid())
+  email            String            @unique
+  password         String
+  name             String
+  role             Role
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  tokens           Token[]
+  profile          Profile?
+  vehicles         Vehicle[]
+  trips            Trip[]
+  loads            Load[]
+  payments         Payment[]
+  reviewsGiven     Review[]          @relation("Reviewer")
+  reviewsReceived  Review[]          @relation("Reviewee")
+  savedLocations   SavedLocation[]
+  favoriteDrivers  FavoriteDriver[]  @relation("CustomerFavorites")
+  favoritedBy      FavoriteDriver[]  @relation("DriverFavoritedBy")
+  supportTickets   SupportTicket[]
+  messagesSent     Message[]         @relation("MessageSender")
+  messagesRecv     Message[]         @relation("MessageReceiver")
+  notifications    Notification[]
+  driverPreference DriverPreference?
+}
+
+model Token {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model Profile {
+  id          String  @id @default(uuid())
+  userId      String  @unique
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone       String?
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  avatarUrl   String?
+  bio         String?
+  licenseNo   String?
+  experience  Int?
+  companyName String?
+  gstNo       String?
+
+  // Verification & Trust
+  verificationStatus       VerificationStatus @default(PENDING)
+  idProofUrl               String?
+  addressProofUrl          String?
+  licenseUrl               String?
+  trustScore               Float              @default(5.0) // Out of 5.0
+  historicalAcceptanceRate Float?             @default(0.0)
+  reliabilityScore         Float?             @default(5.0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DriverPreference {
+  id                   String           @id @default(uuid())
+  driverId             String           @unique
+  driver               User             @relation(fields: [driverId], references: [id])
+  status               DriverStatus     @default(AVAILABLE)
+  flexibilityLevel     FlexibilityLevel @default(BALANCED)
+  preferredCategories  String[]
+  rejectedCategories   String[]
+  preferredRegions     String[]
+  avoidRegions         String[]
+  minExpectedEarnings  Int?
+  preferredDistanceMin Float?
+  preferredDistanceMax Float?
+  preferredUtilization Float            @default(0.8)
+}
+
+model Vehicle {
+  id             String      @id @default(uuid())
+  ownerId        String
+  owner          User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  registrationNo String      @unique
+  type           VehicleType
+  make           String
+  model          String
+  year           Int
+  capacityWeight Float
+  capacityVolume Float
+  dimensions     String?
+  isActive       Boolean     @default(true)
+
+  // Verification
+  verificationStatus VerificationStatus @default(PENDING)
+  rcDocUrl           String?
+  insuranceDocUrl    String?
+  permitDocUrl       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  trips     Trip[]
+}
+
+model Trip {
+  id           String     @id @default(uuid())
+  driverId     String
+  driver       User       @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  vehicleId    String
+  vehicle      Vehicle    @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  status       TripStatus @default(PLANNED)
+  sourceName   String
+  sourceLat    Float
+  sourceLng    Float
+  destName     String
+  destLat      Float
+  destLng      Float
+  returnToName String?
+  returnToLat  Float?
+  returnToLng  Float?
+
+  // Trip Overrides & Intent
+  returnIntent        ReturnIntent?
+  returnWindowStart   DateTime?
+  returnWindowEnd     DateTime?
+  flexibilityOverride FlexibilityLevel?
+
+  // Timing
+  expectedArrivalAt DateTime?
+  expectedReturnAt  DateTime?
+
+  // Capacity Tracking (for partial return loads)
+  availableWeight Float?
+  availableVolume Float?
+
+  routeGeometry Json?
+  distanceKm    Float?
+  durationMins  Float?
+
+  // Delivery Verification
+  driverDeliveryConfirmed   Boolean @default(false)
+  customerDeliveryConfirmed Boolean @default(false)
+  deliveryProofPhotoUrl     String?
+  customerESignatureUrl     String?
+  pickupOtp                 String?
+  deliveryOtp               String?
+  pickupOtpVerified         Boolean @default(false)
+  deliveryOtpVerified       Boolean @default(false)
+
+  startedAt       DateTime?
+  endedAt         DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  recommendations Recommendation[]
+  reviews         Review[]
+  messages        Message[]
+}
+
+model Load {
+  id                String             @id @default(uuid())
+  customerId        String
+  customer          User               @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  pickupName        String
+  pickupLat         Float
+  pickupLng         Float
+  pickupTime        DateTime?
+  dropName          String
+  dropLat           Float
+  dropLng           Float
+  dropTime          DateTime?
+  weight            Float
+  dimensions        String?
+  volumeCbf         Float?             @default(0)
+  goodsCategory     String
+  budget            Int
+  status            LoadStatus         @default(PENDING)
+  schedulingType    LoadSchedulingType @default(IMMEDIATE)
+  pickupWindowStart DateTime?
+  pickupWindowEnd   DateTime?
+  earliestPickupAt  DateTime?
+  latestPickupAt    DateTime?
+
+  // OTP Verification for Cargo Handover
+  pickupOtp           String?
+  deliveryOtp         String?
+  pickupOtpVerified   Boolean            @default(false)
+  deliveryOtpVerified Boolean            @default(false)
+
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  recommendations   Recommendation[]
+  payments          Payment[]
+}
+
+model Recommendation {
+  id     String @id @default(uuid())
+  tripId String
+  trip   Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  loadId String
+  load   Load   @relation(fields: [loadId], references: [id], onDelete: Cascade)
+
+  routeOverlap        Float
+  distanceDeviation   Float
+  capacityUtilization Float
+  timeCompatibility   Float
+  vehicleType         VehicleType
+  loadType            String
+  tripSourceLat       Float
+  tripSourceLng       Float
+  tripDestLat         Float
+  tripDestLng         Float
+  loadPickupLat       Float
+  loadPickupLng       Float
+  loadDropLat         Float
+  loadDropLng         Float
+
+  score Float
+
+  // Negotiation fields
+  proposedPrice Int?
+  concession    Int?
+  terms         String?
+
+  // OTP Verification for Cargo Handover
+  pickupOtp           String?
+  deliveryOtp         String?
+  pickupOtpVerified   Boolean            @default(false)
+  deliveryOtpVerified Boolean            @default(false)
+
+  status RecommendationStatus @default(PENDING)
+
+  // ML Labels & Timestamps
+  acceptedAt           DateTime?
+  rejectedAt           DateTime?
+  completedAt          DateTime?
+  reservationExpiresAt DateTime?
+
+  // New Features
+  expectedEarning    Int?
+  returnDateGapHours Float?
+  categoryMatchScore Float?
+  regionMatchScore   Float?
+  driverHistAccRate  Float?
+  custReliability    Float?
+  vehicleUtilScore   Float?
+
+  matchQuality         MatchQuality @default(FAIR)
+  recommendationReason Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tripId, loadId])
+}
+
+model Payment {
+  id     String  @id @default(uuid())
+  userId String
+  user   User    @relation(fields: [userId], references: [id])
+  loadId String?
+  load   Load?   @relation(fields: [loadId], references: [id])
+
+  providerPaymentId String?       @unique
+  amountMinorUnits  Int
+  currencyCode      String        @default("INR")
+  status            PaymentStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  reviewerId String
+  reviewer   User     @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  revieweeId String
+  reviewee   User     @relation("Reviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
+  tripId     String?
+  trip       Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  rating     Int // 1 to 5
+  comment    String?
+  createdAt  DateTime @default(now())
+}
+
+model SavedLocation {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  address   String
+  lat       Float
+  lng       Float
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model FavoriteDriver {
+  id         String   @id @default(uuid())
+  customerId String
+  customer   User     @relation("CustomerFavorites", fields: [customerId], references: [id], onDelete: Cascade)
+  driverId   String
+  driver     User     @relation("DriverFavoritedBy", fields: [driverId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([customerId, driverId])
+}
+
+model SupportTicket {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  subject     String
+  description String
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  sender     User     @relation("MessageSender", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("MessageReceiver", fields: [receiverId], references: [id])
+  tripId     String?
+  trip       Trip?    @relation(fields: [tripId], references: [id])
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String // ALERT, INFO, ACTION
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

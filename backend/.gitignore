@@ -1,0 +1,12 @@
+# Backend Ignore Rules
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+uploads/
+*.log
+ml/venv/
+ml/.venv/
+__pycache__/
+*.pyc

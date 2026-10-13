@@ -1,0 +1,9 @@
+scikit-learn
+xgboost
+onnxmltools
+skl2onnx
+onnxruntime
+psycopg2-binary
+python-dotenv
+pandas
+numpy

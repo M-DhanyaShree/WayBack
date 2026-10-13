@@ -1,6 +1,6 @@
 # WayBack 🚛
 
-> **AI-Powered Return-Trip Logistics & Empty-Haul Freight Orchestration Platform**
+> **Return-Freight Corridor Optimization Platform**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react&logoColor=black)](https://reactjs.org/)
@@ -9,12 +9,11 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## 📌 Overview & Problem Statement
+## Overview & Problem Statement
 
 In commercial freight transportation, up to **40% of truck journeys are empty-haul return trips** ("deadheading"). After delivering outbound cargo, carriers frequently return to their origin hubs empty due to fragmented brokerage networks, lack of real-time load discovery, and opaque pricing. This causes:
 * **Massive fuel and revenue loss** for independent truck drivers and fleet owners.
@@ -25,40 +24,40 @@ In commercial freight transportation, up to **40% of truck journeys are empty-ha
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
-### 1. 🧠 Intelligent Return Load Recommendation Engine
+### 1. Intelligent Return Load Recommendation Engine
 * **Corridor & Detour Filtering:** Identifies pending shipments along the return route between the outbound destination and home hub.
 * **Hybrid Scoring Architecture:** Combines rule-based heuristic scoring (detour distance, vehicle payload match, driver rating) with an **XGBoost ML model** exported to **ONNX runtime** for sub-millisecond acceptance and delivery probability predictions.
 
-### 2. 🤝 Bilateral Negotiation & Milestone Escrow
+### 2. Bilateral Negotiation & Milestone Escrow
 * **Transparent Pricing:** Shippers specify budgets; drivers can accept directly or propose competitive counter-offers.
 * **Customer Driver Approval:** Shippers review driver profiles and fleet specifications before confirming bookings.
 * **Milestone Freight Settlement:** Customers pay an initial deposit upon confirmation, with remaining balance settled upon verified delivery. No duplicate billing or ambiguous percentages.
 
-### 3. 🔐 Dual Cryptographic OTP Custody Protocol
+### 3. Dual Cryptographic OTP Custody Protocol
 * **1st OTP (Pickup Handover):** Shared between customer and driver. The driver enters the OTP provided by the shipper to officially commence the journey and establish physical cargo custody.
 * **2nd OTP (Delivery Handover):** Shared between customer and consignee. The driver enters the consignee OTP upon delivery to verify correct recipient handover.
 
-### 4. 🛰️ Real-Time GPS Tracking & Highway Corridor Simulation
+### 4. Real-Time GPS Tracking & Highway Corridor Simulation
 * **Live Fleet Telemetry:** WebSocket-powered location broadcast directly to the customer's tracking portal.
 * **Interactive Route Simulation:** Real-time driver movement simulation along designated highway corridors, supporting turnaround return trips and origin resets.
 * **Turn-by-Turn Geometry:** OpenRouteService integration for accurate driving directions and highway distance calculation.
 
-### 5. 📸 Tamper-Proof Proof of Delivery (PoD)
+### 5. Tamper-Proof Proof of Delivery (PoD)
 * **Cloudinary Photo Evidence:** Drivers take and upload high-resolution unloading photos directly through the mobile/web interface.
 * **Consignee Digital E-Signature:** Touch/mouse-enabled HTML5 canvas capture recording recipient signature upon cargo receipt.
 
-### 6. 📜 Complete Trip Dossier & Statutory Consignment Note (Waybill)
+### 6. Complete Trip Dossier & Statutory Consignment Note (Waybill)
 * **Carriage by Road Act 2007 Compliance:** Formats trip history into a standardized electronic Consignment Note (Section 10 statutory declaration).
 * **Auditable Freight Ledger:** Displays assigned vehicle registration, driver contact details, origin/destination GPS coordinates, dual OTP verification timestamps, unloading photo proof, and invoice settlement ledger.
 
-### 7. 💬 Unified Real-Time Collaboration
+### 7. Unified Real-Time Collaboration
 * **Instant Chat Overlay:** Built-in messaging drawer allowing shippers and drivers to coordinate pickup timings, dock numbers, and transit updates seamlessly.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 graph TD
@@ -81,7 +80,7 @@ graph TD
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```text
 wayback/
@@ -107,7 +106,7 @@ wayback/
 │   ├── Dockerfile            # Container build specification for frontend
 │   └── .env.example          # Frontend environment variable template
 ├── docs/                     # Specifications, QA test reports, and gap analysis
-├── docker-compose.yml        # Multi-container orchestration (DB + API + Web)
+├── docker-compose.yml        
 ├── .gitignore                # Comprehensive version control ignore rules
 ├── SETUP.md                  # Step-by-step developer and production setup guide
 └── README.md                 # Primary project documentation
@@ -115,23 +114,21 @@ wayback/
 
 ---
 
-## 👥 User Roles & Permissions
+## User Roles & Permissions
 
 | Role | Permissions & Capabilities |
 |---|---|
 | `CUSTOMER` | Post freight loads, review recommended drivers, negotiate rates, pay milestone deposits, track vehicles live, view Trip Dossiers & Waybills. |
 | `DRIVER` | Register commercial trips, view ML-ranked return loads, negotiate bids, verify dual OTPs, simulate/broadcast GPS coordinates, upload PoD proof. |
-| `VEHICLE_OWNER` | Manage commercial vehicle assets, assign vehicles to trips, inspect driver earnings and maintenance logs. |
-| `ADMIN` | Platform oversight, system health monitoring, user account management, and compliance auditing. |
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/your-username/wayback.git
+git clone https://github.com/M-DhanyaShree/wayback.git
 cd wayback
 ```
 
@@ -172,7 +169,7 @@ The application is available at **http://localhost:5173**.
 
 ---
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 Run the complete multi-service stack with a single command:
 
@@ -187,7 +184,7 @@ Services will be accessible at:
 
 ---
 
-## ⚙️ Environment Variables
+## Environment Variables
 
 ### Backend (`backend/.env`)
 
@@ -212,7 +209,7 @@ Services will be accessible at:
 
 ---
 
-## 🧪 Machine Learning Training Pipeline
+## Machine Learning Training Pipeline
 
 WayBack includes an automated model retraining pipeline under `backend/ml/`:
 1. **Feature Engineering:** Extracts corridor distance, detour ratio, payload utilization, rate per ton-km, and driver trust score.
@@ -230,7 +227,7 @@ python training/train.py
 
 ---
 
-## 🔒 Security & Data Integrity
+## Security & Data Integrity
 
 * **Dual OTP Verification:** Enforces verified pickup and delivery handovers with time-bound cryptographic tokens.
 * **Role-Based Access Control (RBAC):** Strict middleware policies enforce endpoint isolation across roles.
@@ -239,6 +236,6 @@ python training/train.py
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
